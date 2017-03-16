@@ -206,7 +206,7 @@ class RefererField(MultiTraitField, RecursiveFieldType(URLDecodedField), Escaped
                     'netloc':   hostname, \
                     'colten':   '.'.join(reversed(hostname.split('.'))), \
                     'path':     o.path, \
-                    'query':    o.query, \
+                    'query':    urlparse.parse_qs(o.query), \
                     'site':     '.'.join(hostname.split('.')[-2:]), \
                 }
 
