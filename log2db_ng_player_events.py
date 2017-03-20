@@ -256,7 +256,7 @@ class UploadSession(object):
         error_file.close()
 
 class UploadSessionPlayerEvents(UploadSession):
-    data_types = ['player_events', 'player_events_test',]
+    data_types = ['player_events', 'player_events_test', 'player_events_v5',]
 
     anonymous_fields = ('rts', 'ip',)
 
