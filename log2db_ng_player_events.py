@@ -274,6 +274,7 @@ class UploadSessionPlayerEvents(UploadSession):
                                                     upload.upload_session_field \
                                                 where \
                                                     data_type = \'%(data_type)s\' \
+                                                    and not field_to like '%_query_%' -- params from query of URL \
                                             ' % \
                                             { \
                                                 'data_type':    self.data_type, \
