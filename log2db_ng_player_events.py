@@ -1,6 +1,3 @@
-#!/usr/local/bin/python -Wignore::DeprecationWarning
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function
 
 import os
