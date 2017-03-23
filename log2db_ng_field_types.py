@@ -190,6 +190,25 @@ class LogCharField(MultiTraitField, NullableField, RecursiveFieldType(URLDecoded
 class TimestampField(MultiTraitField, FloatField, IntField):
     pass
 
+
+class RefererNestingField(RefererField):
+    def clean(self):
+        refererField = super(RefererNestingField, self).clean()
+        
+        dl = refererField.query.get('dl')
+        dlRefererField = super(RefererNestingField, dl).clean()
+
+        return  { \
+                    'scheme':   refererField.scheme, \
+                    'netloc':   refererField.hostname, \
+                    'colten':   refererField.colten, \
+                    'path':     refererField.path, \
+                    'query':    refererField.query, \
+                    'site':     refererField.site, \
+                    'dl': dlRefererField
+                }    
+
+
 class RefererField(MultiTraitField, RecursiveFieldType(URLDecodedField), EscapedField, LimitedLengthFieldType(1024)):
     def clean(self):
         super(RefererField, self).clean()
@@ -208,7 +227,7 @@ class RefererField(MultiTraitField, RecursiveFieldType(URLDecodedField), Escaped
                     'path':     o.path, \
                     'query':    urlparse.parse_qs(o.query), \
                     'site':     '.'.join(hostname.split('.')[-2:]), \
-                }
+                }    
 
 def ErrorFieldType(error_type):
     res = ErrorField
