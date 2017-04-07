@@ -191,24 +191,6 @@ class TimestampField(MultiTraitField, FloatField, IntField):
     pass
 
 
-class RefererNestingField(RefererField):
-    def clean(self):
-        refererField = super(RefererNestingField, self).clean()
-        
-        dl = refererField.query.get('dl')
-        dlRefererField = super(RefererNestingField, dl).clean()
-
-        return  { \
-                    'scheme':   refererField.scheme, \
-                    'netloc':   refererField.hostname, \
-                    'colten':   refererField.colten, \
-                    'path':     refererField.path, \
-                    'query':    refererField.query, \
-                    'site':     refererField.site, \
-                    'dl': dlRefererField
-                }    
-
-
 class RefererField(MultiTraitField, RecursiveFieldType(URLDecodedField), EscapedField, LimitedLengthFieldType(1024)):
     def clean(self):
         super(RefererField, self).clean()
@@ -227,7 +209,37 @@ class RefererField(MultiTraitField, RecursiveFieldType(URLDecodedField), Escaped
                     'path':     o.path, \
                     'query':    urlparse.parse_qs(o.query), \
                     'site':     '.'.join(hostname.split('.')[-2:]), \
-                }    
+                }   
+
+# с дополнительным реферером из dl
+class RefererNestingField(MultiTraitField, RecursiveFieldType(URLDecodedField), EscapedField, LimitedLengthFieldType(1024)):
+    def clean(self):
+        super(RefererNestingField, self).clean()
+
+        o = urlparse.urlsplit(self.value)
+
+        if len(o.scheme) == 0:
+            o = urlparse.urlsplit('undef://%s' % self.value)
+
+        hostname = o.hostname or ''
+        ref = None
+        if len(o.query)>0:
+            q = urlparse.parse_qs(o.query)
+            if len(q)>0:            
+                ref_dl = q.get('dl')
+                if ref_dl and len(ref_dl)>0:
+                    ref = RefererField(ref_dl[0]).clean()
+            return  { \
+                        'scheme':   o.scheme, \
+                        'netloc':   hostname, \
+                        'colten':   '.'.join(reversed(hostname.split('.'))), \
+                        'path':     o.path, \
+                        'query':    q, \
+                        'site':     '.'.join(hostname.split('.')[-2:]), \
+                        'ref':	ref, \
+                    } 
+
+
 
 def ErrorFieldType(error_type):
     res = ErrorField
