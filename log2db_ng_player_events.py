@@ -317,12 +317,7 @@ class UploadSessionPlayerEvents(UploadSession):
 
 		assert self.mandatory_fields == self.mandatory_fields & set(fields.keys()) , "no_mandatory_fields"
 
-		facts = {}
-
-		# print('self.fields') 
-		# print(self.fields)
-		# print('fields')
-		# print(fields)           
+		facts = {}         
 
 		def process_fields():
 			for field in fields: # for i in range(0,len(fields)):
@@ -331,7 +326,6 @@ class UploadSessionPlayerEvents(UploadSession):
 				if field_from == sampling_data_field:
 					sampling_data_finded = True
 					if len(sampling_data_mask)>0:
-						print len(sampling_data_mask)LEN(SAMPLING_DATA_MASK)
 						if sampling_data_mask != facts[field_to][:len(sampling_data_mask)]
 							return None
 				field_to = ''
