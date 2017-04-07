@@ -79,7 +79,7 @@ def parse_args():
 				dest    = "dbdatabase", 
 				default = "stats",
 				help    = "db name")
-	parser.add_option("-M", "--sampling_data", 
+	parser.add_option("-s", "--sampling_data", 
 				type    = "string", 
 				dest    = "sampling_data", 
 				default = "cid:", 	# example "cid:1234" 	=> 1) cid is mandatory 2) value of cid like "1234..."
