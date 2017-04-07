@@ -79,6 +79,7 @@ def parse_args():
 				dest    = "dbdatabase", 
 				default = "stats",
 				help    = "db name")
+
 	parser.add_option("-s", "--sampling_data", 
 				type    = "string", 
 				dest    = "sampling_data", 
@@ -86,7 +87,6 @@ def parse_args():
 									# example "cid:" 		=> 1) cid is mandatory 2) value does not matter
 				help    = "sampling_data")	
   
-
 	(prog_options, prog_args) = parser.parse_args()
 
 	return (prog_options, prog_args)
@@ -320,9 +320,9 @@ class UploadSessionPlayerEvents(UploadSession):
 		facts = {}         
 
 		def process_fields():
-			for field in fields: # for i in range(0,len(fields)):
+			for field in fields:
 				sampling_data_finded = False
-				field_from = field # fields[i] #  fields.values()[i]
+				field_from = field
 				if field_from == sampling_data_field:
 					sampling_data_finded = True
 					if len(sampling_data_mask)>0:
@@ -335,7 +335,7 @@ class UploadSessionPlayerEvents(UploadSession):
 						field_type = row[2]
 						try:
 							v = (eval('%s(fields[\'%s\'])' % (field_type, field_from, ))).clean()
-							facts[field_to] = v # eval('%s(fields[\'%s\'])' % (field_type, field_from,)).clean()
+							facts[field_to] = v
 						except:
 							bad_data = field_from + ":" + fields[field_from]
 							if facts.has_key('err_log_bad'):
