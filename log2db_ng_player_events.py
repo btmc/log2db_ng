@@ -326,7 +326,7 @@ class UploadSessionPlayerEvents(UploadSession):
 				if field_from == sampling_data_field:
 					sampling_data_finded = True
 					if len(sampling_data_mask)>0:
-						if sampling_data_mask != facts[field_to][:len(sampling_data_mask)]
+						if sampling_data_mask != facts[field_to][:len(sampling_data_mask)]:
 							return None
 				field_to = ''
 				for row in self.fields:
