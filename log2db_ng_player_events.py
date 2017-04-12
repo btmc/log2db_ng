@@ -79,7 +79,7 @@ def parse_args():
 				dest    = "dbdatabase", 
 				default = "stats",
 				help    = "db name")
-	
+
 	parser.add_option("-s", "--sampling_data", 
 				type    = "string", 
 				dest    = "sampling_data", 
@@ -102,15 +102,16 @@ class UploadSession(object):
 
 		self.filename = filename 
 		self.data_type = data_type
-		self.sampling_data = sampling_data
 		
-		self.sampling_data_field = ''
+		self.sampling_data = sampling_data
+
 		self.sampling_data_mask = ''
+		self.sampling_data_mask_len = 0
 		sampling_data_splited = sampling_data.split(':')
 		self.sampling_data_field = sampling_data_splited[0] # re.split('[:]', sampling_data) # self.sampling_data = sampling_data
-
-		self.sampling_data_mask = sampling_data_splited[1]
-		self.sampling_data_mask_len = len(self.sampling_data_mask)
+		if len(sampling_data_splited)>1:
+			self.sampling_data_mask = sampling_data_splited[1]
+			self.sampling_data_mask_len = len(self.sampling_data_mask)
 
 		super(UploadSession, self).__init__(*args, **kwargs)
 
@@ -320,9 +321,7 @@ class UploadSessionPlayerEvents(UploadSession):
 				print(line1)
 				raise NameError('len(split1)=3') 
 
-		fields = {}
-
-		# 1489616707.108|84.163.88.44|4.3|A0982149-7FEB-E6EA-EB4F-934DB1F7DCD5||1E2A36EE-A425-8537-D22F-05B52E31AAD9|1|2||F|PLADF||101964442|||https://cdn.pladform.ru|||M|PLDF_PL:18046|ADXREF:https%3A%2F%2Fpubads.g.doubleclick.net%2Fgampad%2Fads%3Fsz%3D640x480%26iu%3D%2F98544404%2FPladformNetwork%26cust_params%3Dcllive%253D2%2526clps%253D3%2526clurl%253D%25%25PATTERN%3Aodnoklassniki.ru%2526clcontentID%253D4m%2526clint%253Dwaterfall%2526clviti%253D%25%25PATTERN%3Avideotitle%25%25%2526clvidesc%253D%25%25PATTERN%3Avideodescription%25%25%2526clcoin%253D1%2526clcoty%253Dnonesl%2526clcogrp%253Dgames%2526clauone%253DPladformNetwork%2526clpos%253Dpre%2526cldevca%253Ddesktop%2526clvimu%253D2%2526clvpaid%253D1%26impl%3Ds%26gdfp_req%3D1%26env%3Dvp%26output%3Dvast%26unviewed_position_start%3D1%26url%3Dodnoklassniki.ru%26description_url%3Dodnoklassniki.ru%26correlator%3D9769302930355203|ADVXL:0|ADREF:nobanner|ADVPT:2298|ADCLS:0|ADWRPC:0 				
+		fields = {} # 1489616707.108|84.163.88.44|4.3|A0982149-7FEB-E6EA-EB4F-934DB1F7DCD5||1E2A36EE-A425-8537-D22F-05B52E31AAD9|1|2||F|PLADF||101964442|||https://cdn.pladform.ru|||M|PLDF_PL:18046|ADXREF:https%3A%2F%2Fpubads.g.doubleclick.net%2Fgampad%2Fads%3Fsz%3D640x480%26iu%3D%2F98544404%2FPladformNetwork%26cust_params%3Dcllive%253D2%2526clps%253D3%2526clurl%253D%25%25PATTERN%3Aodnoklassniki.ru%2526clcontentID%253D4m%2526clint%253Dwaterfall%2526clviti%253D%25%25PATTERN%3Avideotitle%25%25%2526clvidesc%253D%25%25PATTERN%3Avideodescription%25%25%2526clcoin%253D1%2526clcoty%253Dnonesl%2526clcogrp%253Dgames%2526clauone%253DPladformNetwork%2526clpos%253Dpre%2526cldevca%253Ddesktop%2526clvimu%253D2%2526clvpaid%253D1%26impl%3Ds%26gdfp_req%3D1%26env%3Dvp%26output%3Dvast%26unviewed_position_start%3D1%26url%3Dodnoklassniki.ru%26description_url%3Dodnoklassniki.ru%26correlator%3D9769302930355203|ADVXL:0|ADREF:nobanner|ADVPT:2298|ADCLS:0|ADWRPC:0 				
 		with_anonymous_fields_client = split1[2][:1].isdigit()
 		k=0
 		for v in split1:
@@ -352,16 +351,16 @@ class UploadSessionPlayerEvents(UploadSession):
 		def process_fields():
 			facts = {}
 			sampling_finded = False	# sampling_passed = True	
-			facts['log_source'] = 0 # TODO: допилить с учетом yast						 
-			for field in fields:			
-				field_from = field
+			facts['log_source'] = 0 # TODO: допилить с учетом yast/metric 						 
+			for field in fields: # поля лога		
+				field_from = field				
 				if field_from == self.sampling_data_field:
 					sampling_finded = True
-					if self.sampling_data_mask_len>0:
+					if self.sampling_data_mask_len > 0:
 						if self.sampling_data_mask != fields[field_from][:self.sampling_data_mask_len]:
 							return None # sampling_passed = False # None
 				field_to = ''
-				for row in self.fields:
+				for row in self.fields: # справочник с маппингом
 					if row[0]==field_from:
 						field_to = row[1]
 						field_type = row[2]
@@ -376,9 +375,9 @@ class UploadSessionPlayerEvents(UploadSession):
 							else:
 								facts['err_log_bad'] = bad_data
 							print('err_log_bad: ' + facts['err_log_bad'])
-						break # return #  
+						continue # (!) одно и тоже поле может маппиться под разными соусами (например, по ip - геоданные)   
 				# print(fields)
-				if field_to=='':
+				if field_to=='' and field_from != 'err_log_unknown':
 					if facts.has_key('err_log_unknown'):
 						facts['err_log_unknown'] = facts['err_log_unknown'] + '|' + field_from
 					else:
