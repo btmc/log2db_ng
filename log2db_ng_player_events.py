@@ -279,7 +279,7 @@ class UploadSessionPlayerEvents(UploadSession):
 
 	anonymous_fields_server = ('rts', 'ip',)
 	# 1489616707.108|84.163.88.44|4.3|A0982149-7FEB-E6EA-EB4F-934DB1F7DCD5||1E2A36EE-A425-8537-D22F-05B52E31AAD9|1|2||F|PLADF||101964442|||https://cdn.pladform.ru|||M|PLDF_PL:18046|ADXREF:https%3A%2F%2Fpubads.g.doubleclick.net%2Fgampad%2Fads%3Fsz%3D640x480%26iu%3D%2F98544404%2FPladformNetwork%26cust_params%3Dcllive%253D2%2526clps%253D3%2526clurl%253D%25%25PATTERN%3Aodnoklassniki.ru%2526clcontentID%253D4m%2526clint%253Dwaterfall%2526clviti%253D%25%25PATTERN%3Avideotitle%25%25%2526clvidesc%253D%25%25PATTERN%3Avideodescription%25%25%2526clcoin%253D1%2526clcoty%253Dnonesl%2526clcogrp%253Dgames%2526clauone%253DPladformNetwork%2526clpos%253Dpre%2526cldevca%253Ddesktop%2526clvimu%253D2%2526clvpaid%253D1%26impl%3Ds%26gdfp_req%3D1%26env%3Dvp%26output%3Dvast%26unviewed_position_start%3D1%26url%3Dodnoklassniki.ru%26description_url%3Dodnoklassniki.ru%26correlator%3D9769302930355203|ADVXL:0|ADREF:nobanner|ADVPT:2298|ADCLS:0|ADWRPC:0
-	anonymous_fields_client = ('log_version', 'cid', 'uid', 'pid', 'mid', 'n', 'q', 'app_type', 'a', 'content_type', 'content_id', 'stream_server_id', 'hd', 'edge', 'bitrate', 'paid_status', 'video_format') 
+	anonymous_fields_client = ('log_version', 'cid', 'uid', 'pid', 'mid', 'n', 'q', 'app_type', 'a', 'content_type', 'content_id', 'stream_server_id', 'content_hd', 'bl', 'bitr', 'paid_status', 'video_format') 
 
 	def __init__(self, filename, data_type, sampling_data, *args, **kwargs):
 		super(UploadSessionPlayerEvents, self).__init__(filename, data_type, sampling_data, *args, **kwargs)
