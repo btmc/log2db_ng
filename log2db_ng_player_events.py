@@ -366,7 +366,6 @@ class UploadSessionPlayerEvents(UploadSession):
 						field_type = row[2]
 						try:
 							v = (eval('%s(fields[\'%s\'])' % (field_type, field_from, ))).clean()
-							# print(type(v))
 							facts[field_to] = v # eval('%s(fields[\'%s\'])' % (field_type, field_from,)).clean()
 						except:
 							bad_data = field_from + ":" + fields[field_from]
