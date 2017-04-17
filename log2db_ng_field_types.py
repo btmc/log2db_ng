@@ -5,6 +5,7 @@ import re
 import urllib
 import urlparse
 import math
+import os
 
 import geoip2.database
 import geoip2.errors
@@ -239,6 +240,39 @@ class RefererNestingField(MultiTraitField, RecursiveFieldType(URLDecodedField), 
                         'ref':	ref, \
                     } 
 
+# с выделением файла и расширения /hls-vod/knllw1laxhdhbf3qmiztfq/1491700172/124/0x500003970b8829ca/5b8aefaf3df14ea8ab5e375cb187868c.mp4.m3u8
+class RefererWithFileField(MultiTraitField, RecursiveFieldType(URLDecodedField), EscapedField, LimitedLengthFieldType(1024)):
+    def clean(self):
+        super(RefererWithFileField, self).clean()
+
+        o = urlparse.urlsplit(self.value)
+
+        if len(o.scheme) == 0:
+            o = urlparse.urlsplit('undef://%s' % self.value)
+
+        hostname = o.hostname or ''
+
+        dirname = '' # basename = ''
+        filename = ''
+        fileext = ''
+        if len(o.path)>1:
+            dirname, basename = os.path.split(o.path) # filename = o.path.split('/')[-1]
+            if len(basename)>2:
+                filename, fileext = os.path.splitext(basename)
+            else:
+                filename = basename
+
+
+        return  { \
+                    'scheme':   o.scheme, \
+                    'netloc':   hostname, \
+                    'colten':   '.'.join(reversed(hostname.split('.'))), \
+                    'dirname':     dirname, \
+                    'filename': filename,\
+                    'fileext': fileext,\
+                    'query':    urlparse.parse_qs(o.query), \
+                    'site':     '.'.join(hostname.split('.')[-2:]), \
+                }  
 
 
 def ErrorFieldType(error_type):
