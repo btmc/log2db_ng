@@ -107,7 +107,7 @@ class UploadSession(object):
 
 		self.sampling_data_mask = ''
 		self.sampling_data_mask_len = 0
-		sampling_data_splited = sampling_data.split(':')
+		sampling_data_splited = sampling_data.split(':', 1)
 		self.sampling_data_field = sampling_data_splited[0] # re.split('[:]', sampling_data) # self.sampling_data = sampling_data
 		if len(sampling_data_splited)>1:
 			self.sampling_data_mask = sampling_data_splited[1]
@@ -334,7 +334,7 @@ class UploadSessionPlayerEvents(UploadSession):
 				field_name = self.anonymous_fields_client[k - len(self.anonymous_fields_server)]				
 				field_value = v
 			else:
-				v1 = v.split(":", 1)
+				v1 = v.split(':', 1)
 				if len(v1) == 2:
 					field_name = v1[0]				
 					field_value = v1[1] #, k 
