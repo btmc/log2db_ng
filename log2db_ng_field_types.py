@@ -288,7 +288,7 @@ class ErrorField(MultiTraitField, RecursiveFieldType(URLDecodedField), EscapedFi
         res = {}
         res['name'] = self.error_type
 
-        field_parts = re.split('[,]', self.value)
+        field_parts = self.value.split(':', 1) # re.split('[,]', self.value)
 
         try:
             res['code'] = int(field_parts[0])
