@@ -289,13 +289,14 @@ class ErrorField(MultiTraitField, RecursiveFieldType(URLDecodedField), EscapedFi
         res['name'] = self.error_type
 
         field_parts = self.value.split(',', 1) # re.split('[,]', self.value)
-
-        try:
+        if len(field_parts)==1:
+            field_parts = self.value.split('%2C', 1)
+                
+        if len(field_parts)==2:
             res['code'] = int(field_parts[0])
             res['msg'] = field_parts[1]
-        except:
+        else:
             res['msg'] = self.value
-
         return res
 
 class UserAgentField(MultiTraitField, URLDecodedField, EscapedField, LimitedLengthFieldType(1024)):
