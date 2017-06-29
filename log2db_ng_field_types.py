@@ -288,18 +288,23 @@ class ErrorField(MultiTraitField, RecursiveFieldType(URLDecodedField), EscapedFi
         res = {}
         res['name'] = self.error_type
 
-        field_parts = self.value.split(',', 1) # re.split('[,]', self.value)
-        if len(field_parts)==1:
-            field_parts = self.value.split('%2C', 1)
-               
-        try:
-            if len(field_parts)==2:
-                res['code'] = int(field_parts[0])
-                res['msg'] = field_parts[1]
-            else:
+        if self.value.isdigit():
+            res['code'] = int(self.value)
+        else:
+            field_parts = self.value.split(',', 1) # re.split('[,]', self.value)
+            if len(field_parts)==1:
+                field_parts = self.value.split('%2C', 1)
+            if len(field_parts)==1:
+                field_parts = self.value.split('_', 1)
+
+            try:
+                if len(field_parts)==2:
+                    res['code'] = int(field_parts[0])
+                    res['msg'] = field_parts[1]
+                else:
+                    res['msg'] = self.value
+            except:
                 res['msg'] = self.value
-        except:
-            res['msg'] = self.value           
 
         return res
 
