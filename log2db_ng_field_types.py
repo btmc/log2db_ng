@@ -93,7 +93,6 @@ class GeoIP2CityDBCountryField(GeoIP2CityDBField):
 class GeoIP2CityDBConnTypeField(GeoIP2CityDBField):
     def clean(self):
         self.value = super(GeoIP2CityDBConnTypeField, self).clean()
-
         try:
             return  self.conn_type
         except:
@@ -126,7 +125,6 @@ class NullableField(LogField):
         if isinstance(self.value, basestring):
             if self.value.lower() == 'undefined':
                 return None
-
         return self.value
 
 class EscapedField(LogField):

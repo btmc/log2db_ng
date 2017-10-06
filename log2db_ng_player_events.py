@@ -118,7 +118,7 @@ class UploadSession(object):
 	def __enter__(self):
 		for subclass in self.__class__.__subclasses__():
 			if self.data_type in subclass.data_types:
-				return subclass(self.filename, self.data_type, self.sampling_data) # return subclass(self.filename, self.data_type, self.sampling_data_field, self.sampling_data_mask) # 
+				return subclass(self.filename, self.data_type, self.sampling_data)
 
 		raise TypeError()
 
@@ -308,8 +308,7 @@ class UploadSessionPlayerEvents(UploadSession):
 
 	def parse_line(self, line): # , sampling_data_field, sampling_data_mask
 		line1 = line.lower()
-		split1 = line1.split('|')
-		# print(split1)
+		split1 = line1.split('|')# print(split1)
 
 		if len(split1)<3:
 			print(line1)
@@ -326,38 +325,39 @@ class UploadSessionPlayerEvents(UploadSession):
 		k=0
 		for v in split1:
 			field_name = ''
-			field_value = ''							
+			field_value = ''
 			if k < len(self.anonymous_fields_server):
 				field_name = self.anonymous_fields_server[k]
 				field_value = v
 			elif with_anonymous_fields_client and k < len(self.anonymous_fields_server)+len(self.anonymous_fields_client):
-				field_name = self.anonymous_fields_client[k - len(self.anonymous_fields_server)]				
+				field_name = self.anonymous_fields_client[k - len(self.anonymous_fields_server)]
 				field_value = v
 			else:
 				v1 = v.split(':', 1)
 				if len(v1) == 2:
-					field_name = v1[0]				
+					field_name = v1[0]
 					field_value = v1[1] #, k 
 				else:  # 1489616703.683|46.38.48.106|4.3%7C085049C7-8889-9F9F-1424-62F5B6E53B2B%7C%7C2A9328B8-BBCB-E4C1-3585-406573454A6A%7C5%7C129%7C%7CF%7CPLADF%7C%7C100821058%7C%7C%7Chttp://cdn.pladform.ru%7C%7C%7CM%7CADWRPC:0%7CADREF:nobanner%7CADVPT:101%7CADVXL:0%7CADXREF:http%3A%2F%2Fad.mail.ru%2Fvast%2F3930%3Fpuid1%3D13%26puid2%3D301%26puid3%3D2%26puid4%3D1%26puid5%3D16%26puid6%3D29%26puid7%3D3%26puid8%3D9%26puid9%3D1%26puid10%3D1%26puid11%3D0%26puid12%3D13%26dl%3Dhttp%253A%252F%252Fseasonvar.ru%252Fserial-6625-Kohanya-02-sezon.html%26duration%3D1463%26content_id%3D100821058%26eid2%3D13151%26puid18%3D1%26eid1%3D13151%7C109%7C100821058%7C2028%7CADCLS:0%7CPLDF_PL:13151
 					field_name = 'err_log_unknown'
 					if fields.has_key(field_name):
-						field_value = fields[field_name] + '|' + v1[0]
+						field_value = '%s%s%s' % (fields[field_name], "|", v1[0])
 					else:
-						field_value = v1[0] 
-			fields[field_name] = field_value #, k # fields.update(field_name, field_value)			
+						field_value = v1[0]
+			fields[field_name] = field_value
 			k = k + 1
 		assert self.mandatory_fields == self.mandatory_fields & set(fields.keys()) , "no_mandatory_fields"
 
 		def process_fields():
 			facts = {}
-			sampling_finded = False	# sampling_passed = True	
-			facts['log_source'] = 0 # TODO: допилить с учетом yast/metric 						 
-			for field in fields: # поля лога		
-				field_from = field				
+			sampling_finded = False	# sampling_passed = True
+			facts['log_source'] = 0 # TODO: допилить с учетом yast/metric
+			for field in fields: # поля лога
+				field_from = field
 				if field_from == self.sampling_data_field:
 					sampling_finded = True
 					if self.sampling_data_mask_len > 0:
-						if self.sampling_data_mask != fields[field_from][:self.sampling_data_mask_len]:
+						if self.sampling_data_mask != fields[field_from][:self.sampling_data_mask_len] \
+								and fields[field_from][:self.sampling_data_mask_len] != 'u': # CID:undefined (DB-2518)
 							return None # sampling_passed = False # None
 				field_to = ''
 				for row in self.fields: # справочник с маппингом
@@ -366,25 +366,25 @@ class UploadSessionPlayerEvents(UploadSession):
 						field_type = row[2]
 						try:
 							v = (eval('%s(fields[\'%s\'])' % (field_type, field_from, ))).clean()
-							facts[field_to] = v # eval('%s(fields[\'%s\'])' % (field_type, field_from,)).clean()
+							facts[field_to] = v
 						except:
-							bad_data = field_from + ":" + fields[field_from]
+							bad_data = '%s%s%s' % (field_from, ":", fields[field_from])
 							if facts.has_key('err_log_bad'):
-								facts['err_log_bad'] = facts['err_log_bad'] + '|' + bad_data
+								facts['err_log_bad'] = '%s%s%s' % (facts['err_log_bad'], '|', bad_data)
 							else:
 								facts['err_log_bad'] = bad_data
-							print('err_log_bad: ' + facts['err_log_bad'])
+							print('%s%s' % ('err_log_bad: ', facts['err_log_bad']))
 						continue # (!) одно и тоже поле может маппиться под разными соусами (например, по ip - геоданные)   
 				# print(fields)
 				if field_to=='' and field_from != 'err_log_unknown':
 					if facts.has_key('err_log_unknown'):
-						facts['err_log_unknown'] = facts['err_log_unknown'] + '|' + field_from
+						facts['err_log_unknown'] = '%s%s%s' % (facts['err_log_unknown'], '|', field_from)
 					else:
 						facts['err_log_unknown'] = field_from
 			assert sampling_finded, 'no_' + self.sampling_data_field
 			return facts
 
-		return process_fields()	
+		return process_fields()
 		
 
 def main():
@@ -409,7 +409,7 @@ def main():
 
 			print('\nFinished processing file %s in %s - %s of %s rows processed' %(log_filename, str(datetime.timedelta(seconds = int(time.time() - time_start))), log_session.rows_prepared, log_session.rows_processed,))
 
-		os.unlink(log_filename)             
+		os.unlink(log_filename)
 
 	pgsql_conn.close()
 
