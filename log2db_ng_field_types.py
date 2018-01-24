@@ -12,6 +12,9 @@ import geoip2.errors
 
 geoip_city = geoip2.database.Reader('/usr/local/share/GeoIP/GeoIP2-City.mmdb') 
 geoip_conn_type = geoip2.database.Reader('/usr/local/share/GeoIP/GeoIP2-Connection-Type.mmdb')
+geoip_isp = geoip2.database.Reader('/usr/local/share/GeoIP/GeoIP2-ISP.mmdb')
+# geoip_asn = geoip2.database.Reader('/usr/local/share/GeoIP/GeoLite2-ASN.mmdb')
+# geoip_isp = geoip2.database.Reader('/usr/local/share/GeoIP/GeoIPISP.dat')
 
 class LogField(object):
     def __init__(self, value, *args, **kwargs):
@@ -25,29 +28,80 @@ class LogField(object):
 class IPv4Field(LogField):
     def clean(self):
         assert re.match('([0-2]?([0-5]|(?<![2-9])[0-9])?([0-5]|(?<!25)[0-9])\.){4}', self.value + '.')
-
         return self.value
-    
+
+# GeoIP2-City.mmdb
 class GeoIP2CityDBField(IPv4Field):
     db = None
-    conn_type = None
     ip = None
-
     def __init__(self, value, *args, **kwargs):
         super(GeoIP2CityDBField, self).__init__(value, *args, **kwargs)
-
     def clean(self):
         self.value = super(GeoIP2CityDBField, self).clean()
-
         if self.ip != self.value:
             try:
                 GeoIP2CityDBField.db = geoip_city.city(self.value)
-                GeoIP2CityDBField.conn_type = geoip_conn_type.connection_type(self.value).connection_type
             except geoip2.errors.AddressNotFoundError:
                 GeoIP2CityDBField.db = None
-                GeoIP2CityDBField.conn_type = ''
-
             GeoIP2CityDBField.ip = self.value
+
+# GeoIP2-ISP.mmdb
+class GeoIP2IspDBField(IPv4Field):
+    db = None
+    ip = None
+    def __init__(self, value, *args, **kwargs):
+        super(GeoIP2IspDBField, self).__init__(value, *args, **kwargs)
+    def clean(self):
+        self.value = super(GeoIP2IspDBField, self).clean()
+        if self.ip != self.value:
+            try:
+                GeoIP2IspDBField.db = geoip_isp.isp(self.value)
+            except geoip2.errors.AddressNotFoundError:
+                GeoIP2IspDBField.db = None
+            GeoIP2IspDBField.ip = self.value
+
+class GeoIP2IspDBIspField(GeoIP2IspDBField):
+    def clean(self):
+        self.value = super(GeoIP2IspDBIspField, self).clean()
+        try:
+            return self.db.isp # autonomous_system_organization
+        except:
+            return ''
+
+class GeoIP2IspDBAsnField(GeoIP2IspDBField):
+    def clean(self):
+        self.value = super(GeoIP2IspDBAsnField, self).clean()
+        try:
+            return self.db.autonomous_system_number # autonomous_system_organization
+        except:
+            return 0
+
+# GeoIP2-Connection-Type.mmdb
+class GeoIP2ConnTypeDBField(IPv4Field):
+    ip = None
+    def __init__(self, value, *args, **kwargs):
+        super(GeoIP2ConnTypeDBField, self).__init__(value, *args, **kwargs)
+    def clean(self):
+        self.value = super(GeoIP2ConnTypeDBField, self).clean()
+        if self.ip != self.value:
+            try:
+                return geoip_conn_type.connection_type(self.value).connection_type
+            except geoip2.errors.AddressNotFoundError:
+                return ''
+            GeoIP2ConnTypeDBField.ip = self.value
+
+# class GeoIP2AsnDBField(IPv4Field):
+#     ip = None
+#     def __init__(self, value, *args, **kwargs):
+#         super(GeoIP2AsnDBField, self).__init__(value, *args, **kwargs)
+#     def clean(self):
+#         self.value = super(GeoIP2AsnDBField, self).clean()
+#         if self.ip != self.value:
+#             try:
+#                 return geoip_conn_type.asn(self.value).autonomous_system_number
+#             except geoip2.errors.AddressNotFoundError:
+#                 return 0
+
 
 class GeoIP2CityDBCityField(GeoIP2CityDBField):
     def clean(self):
@@ -90,20 +144,12 @@ class GeoIP2CityDBCountryField(GeoIP2CityDBField):
         except:
             return ''
 
-class GeoIP2CityDBConnTypeField(GeoIP2CityDBField):
-    def clean(self):
-        self.value = super(GeoIP2CityDBConnTypeField, self).clean()
-        try:
-            return  self.conn_type
-        except:
-            return ''
 
 class IntField(LogField):
     def clean(self):
         if isinstance(self.value, basestring):
             if len(self.value) == 0:
                 return None
-
         return int(self.value)
 
 class FloatField(LogField):
@@ -117,7 +163,6 @@ class FloatField(LogField):
             return None
         if math.isinf(res):
             return None
-
         return res
  
 class NullableField(LogField):
@@ -151,8 +196,8 @@ class RecursiveField(LogField):
         return self.clean() 
 
 def RecursiveFieldType(field_class):
-    res = RecursiveField 
-    res.field_class = field_class 
+    res = RecursiveField
+    res.field_class = field_class
 
     return res
 
@@ -237,7 +282,7 @@ class RefererNestingField(MultiTraitField, RecursiveFieldType(URLDecodedField), 
         ref = None
         if len(o.query)>0:
             q = urlparse.parse_qs(o.query)
-            if len(q)>0:            
+            if len(q)>0:
                 ref_dl = q.get('dl')
                 if ref_dl and len(ref_dl)>0:
                     ref = RefererField(ref_dl[0]).clean()
@@ -289,7 +334,6 @@ class RefererWithFileField(MultiTraitField, RecursiveFieldType(URLDecodedField),
 def ErrorFieldType(error_type):
     res = ErrorField
     res.error_type = error_type
-
     return res
 
 class ErrorField(MultiTraitField, RecursiveFieldType(URLDecodedField), EscapedField):
